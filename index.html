@@ -44,6 +44,8 @@
         const maxFilterFreq = actx.sampleRate / 2;
         const filter = actx.createBiquadFilter();
         filter.type = 'lowpass';
+        filter.frequency.value = .5 * maxFilterFreq;
+        filter.Q.value = .5 * 30;
         filter.connect(actx.destination);
 
         filterFreqEl.addEventListener('input', e => {
@@ -65,7 +67,7 @@
             const osc = actx.createOscillator();
             osc.type = 'sawtooth';
             osc.connect(filter);
-            osc.connect(actx.destination);
+            // osc.connect(actx.destination);
             osc.frequency.value = notes[i];
             osc.start();
             await delay(160)
