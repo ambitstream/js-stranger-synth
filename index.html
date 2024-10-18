@@ -23,6 +23,7 @@
 <script type="text/javascript">
     const notes = [65.41, 82.41, 98.00, 123.47, 130.81];
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+    let playing;
 
     const playBtn = document.querySelector('#play');
     const stopBtn = document.querySelector('#stop');
@@ -30,12 +31,14 @@
     const filterFreqQ = document.querySelector('#filterQ');
 
     playBtn.addEventListener('click', async () => {
+        if (playing) return;
+
         const actx = new (AudioContext || webkitAudioContext)();
         if (!actx) throw 'Not supported';
 
         let i = 0;
         let increasing = true;
-        let playing = true;
+        playing = true;
         
         // Filter
         const maxFilterFreq = actx.sampleRate / 2;
