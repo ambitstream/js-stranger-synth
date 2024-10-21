@@ -9,11 +9,11 @@
     <h1>js-stranger-synth</h1>
     <h4>Recreating iconic Stranger Things arpeggio melody with JavaScript</h4>
     <div>
-        <input id="filterFreq" type="range" min="0" max="1" step="0.005" value="0.5" />
+        <input id="filterFreq" type="range" min="50" max="5500" value="440" />
         <small>Filter frequency</small>
     </div>
     <div>
-        <input id="filterQ" type="range" min="0" max="1" step="0.005" value="0.5" />
+        <input id="filterQ" type="range" min="0" max="30" value="3" />
         <small>Filter resonance</small>
     </div>
     <br />
@@ -21,7 +21,9 @@
     <button id="stop">Stop</button>
 </body>
 <script type="text/javascript">
-    const notes = [65.41, 82.41, 98.00, 123.47, 130.81];
+    const notesVoice1 = [65.41, 82.41, 98, 123.47, 130.81];
+    const notesVoice2 = [130.81, 164.81, 196, 246.94, 261.63];
+  
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
     let playing;
 
@@ -41,20 +43,19 @@
         playing = true;
         
         // Filter
-        const maxFilterFreq = actx.sampleRate / 2;
         const filter = actx.createBiquadFilter();
         filter.type = 'lowpass';
-        filter.frequency.value = .5 * maxFilterFreq;
-        filter.Q.value = .5 * 30;
+        filter.frequency.value = 440;
+        filter.Q.value = 3;
         filter.connect(actx.destination);
 
         filterFreqEl.addEventListener('input', e => {
             const val = e.target.value;
-            filter.frequency.value = val * maxFilterFreq;
+            filter.frequency.value = val;
         });
         filterFreqQ.addEventListener('input', e => {
             const val = e.target.value;
-            filter.Q.value = val * 30;
+            filter.Q.value = val;
         });
 
         // Stop button
@@ -64,14 +65,24 @@
         
         // Playing notes
         while (playing) {
-            const osc = actx.createOscillator();
-            osc.type = 'sawtooth';
-            osc.connect(filter);
-            // osc.connect(actx.destination);
-            osc.frequency.value = notes[i];
-            osc.start();
+            // Voice 1
+            const osc1 = actx.createOscillator();
+            osc1.type = 'sawtooth';
+            osc1.connect(filter);
+            osc1.frequency.value = notesVoice1[i];
+            osc1.start();
+            
+            // Voice 2
+            const osc2 = actx.createOscillator();
+            osc2.type = 'sawtooth';
+            osc2.connect(filter);
+            osc2.frequency.value = notesVoice2[i];
+            osc2.start();
+
             await delay(160)
-            osc.stop();
+
+            osc1.stop();
+            osc2.stop();
 
             if (increasing) {
                 i++;
