@@ -18,7 +18,8 @@
     </div>
     <br />
     <button id="play">Play</button>
-    <button id="stop">Stop</button>
+    <button id="stop">Stop</button>&nbsp;&nbsp;
+    <input id="lfo" type="checkbox" disabled /><label for="lfo"><small>Activate LFO</small></label>
 </body>
 <script type="text/javascript">
     const notesVoice1 = [65.41, 82.41, 98, 123.47, 130.81];
@@ -30,10 +31,12 @@
     const playBtn = document.querySelector('#play');
     const stopBtn = document.querySelector('#stop');
     const filterFreqEl = document.querySelector('#filterFreq');
-    const filterFreqQ = document.querySelector('#filterQ');
+    const filterResEl = document.querySelector('#filterQ');
+    const lfo = document.querySelector('#lfo');
 
     playBtn.addEventListener('click', async () => {
         if (playing) return;
+        let LFOinterval;
 
         const actx = new (AudioContext || webkitAudioContext)();
         if (!actx) throw 'Not supported';
@@ -41,6 +44,7 @@
         let i = 0;
         let increasing = true;
         playing = true;
+        lfo.disabled = false;
         
         // Filter
         const filter = actx.createBiquadFilter();
@@ -53,13 +57,54 @@
             const val = e.target.value;
             filter.frequency.value = val;
         });
-        filterFreqQ.addEventListener('input', e => {
+        filterResEl.addEventListener('input', e => {
             const val = e.target.value;
             filter.Q.value = val;
         });
 
+        // LFO
+        lfo.addEventListener('input', e => {
+            const isOn = e.target.checked;
+            let increasing = true;
+            let val = 0;
+            
+            if (isOn) {
+                filterFreqEl.disabled = true;
+                filterResEl.disabled = true;
+
+                LFOinterval = setInterval(() => {
+                    filterFreqEl.value = val;
+                    filter.frequency.value = val;
+
+                    if (increasing) {
+                        val += 5;
+                        if (val > 1400) increasing = false;
+                    } else {
+                        val = val - 5;
+                        if (val < 100) increasing = true;
+                    }
+                }, 20);
+            } else {
+                if (LFOinterval) {
+                    clearInterval(LFOinterval);
+                }
+                
+                filterFreqEl.disabled = false;
+                filterResEl.disabled = false;
+            }
+        });
+
         // Stop button
         stopBtn.addEventListener('click', () => {
+            if (LFOinterval) {
+                clearInterval(LFOinterval);
+            }
+            if (lfo.checked) {
+                lfo.checked = false;
+            }
+            lfo.disabled = true;
+            filterFreqEl.disabled = false;
+            filterResEl.disabled = false;
             playing = false;
         });
         
@@ -92,6 +137,7 @@
                 if (i === 0) increasing = true;
             }
         }
+
     });
 </script>
 </html>
