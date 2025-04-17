@@ -3,141 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stranger Things arpeggio JS synth demo</title>
+    <meta name="description" content="A JavaScript synthesizer recreating the iconic Stranger Things arpeggio melody">
+    <meta name="keywords" content="stranger things, synthesizer, javascript, web audio, arpeggio">
+    <meta name="author" content="Eugene Kholyavkin">
+    <meta name="theme-color" content="#141414">
+    <title>Stranger Things Arpeggio JS Synth</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>js-stranger-synth</h1>
-    <h4>Recreating iconic Stranger Things arpeggio melody with JavaScript</h4>
-    <div>
-        <input id="filterFreq" type="range" min="50" max="5500" value="440" />
-        <small>Filter frequency</small>
+    <h1>Stranger Synth</h1>
+    <h4>Recreating the iconic arpeggio melody with JavaScript</h4>
+    
+    <div class="controls">
+        <div class="control-group">
+            <input id="filterFreq" type="range" min="50" max="5500" value="440" 
+                   aria-label="Filter frequency" aria-valuemin="50" aria-valuemax="5500" aria-valuenow="440" />
+            <small>Filter frequency</small>
+        </div>
+        
+        <div class="control-group">
+            <input id="filterQ" type="range" min="0" max="30" value="3" 
+                   aria-label="Filter resonance" aria-valuemin="0" aria-valuemax="30" aria-valuenow="3" />
+            <small>Filter resonance</small>
+        </div>
+        
+        <div class="control-group row">
+            <button id="play" aria-label="Play synthesizer">Play</button>
+            <button id="stop" aria-label="Stop synthesizer">Stop</button>
+        </div>
+        <div class="control-group">
+            <div>
+                <input id="lfo" type="checkbox" disabled aria-label="Toggle LFO" />
+                <label for="lfo"><small>Activate LFO</small></label>
+            </div>
+        </div>
     </div>
-    <div>
-        <input id="filterQ" type="range" min="0" max="30" value="3" />
-        <small>Filter resonance</small>
-    </div>
-    <br />
-    <button id="play">Play</button>
-    <button id="stop">Stop</button>&nbsp;&nbsp;
-    <input id="lfo" type="checkbox" disabled /><label for="lfo"><small>Activate LFO</small></label>
+
+    <a href="https://github.com/ambitstream/js-stranger-synth" target="_blank">View on GitHub</a>
+
+    <script src="script.js"></script>
 </body>
-<script type="text/javascript">
-    const notesVoice1 = [65.41, 82.41, 98, 123.47, 130.81];
-    const notesVoice2 = [130.81, 164.81, 196, 246.94, 261.63];
-  
-    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-    let playing;
-
-    const playBtn = document.querySelector('#play');
-    const stopBtn = document.querySelector('#stop');
-    const filterFreqEl = document.querySelector('#filterFreq');
-    const filterResEl = document.querySelector('#filterQ');
-    const lfo = document.querySelector('#lfo');
-
-    playBtn.addEventListener('click', async () => {
-        if (playing) return;
-        let LFOinterval;
-
-        const actx = new (AudioContext || webkitAudioContext)();
-        if (!actx) throw 'Not supported';
-
-        let i = 0;
-        let increasing = true;
-        playing = true;
-        lfo.disabled = false;
-        
-        // Filter
-        const filter = actx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.value = 440;
-        filter.Q.value = 3;
-        filter.connect(actx.destination);
-
-        filterFreqEl.addEventListener('input', e => {
-            const val = e.target.value;
-            filter.frequency.value = val;
-        });
-        filterResEl.addEventListener('input', e => {
-            const val = e.target.value;
-            filter.Q.value = val;
-        });
-
-        // LFO
-        lfo.addEventListener('input', e => {
-            const isOn = e.target.checked;
-            let increasing = true;
-            let val = 0;
-            
-            if (isOn) {
-                filterFreqEl.disabled = true;
-                filterResEl.disabled = true;
-
-                LFOinterval = setInterval(() => {
-                    filterFreqEl.value = val;
-                    filter.frequency.value = val;
-
-                    if (increasing) {
-                        val += 5;
-                        if (val > 1400) increasing = false;
-                    } else {
-                        val = val - 5;
-                        if (val < 100) increasing = true;
-                    }
-                }, 20);
-            } else {
-                if (LFOinterval) {
-                    clearInterval(LFOinterval);
-                }
-                
-                filterFreqEl.disabled = false;
-                filterResEl.disabled = false;
-            }
-        });
-
-        // Stop button
-        stopBtn.addEventListener('click', () => {
-            if (LFOinterval) {
-                clearInterval(LFOinterval);
-            }
-            if (lfo.checked) {
-                lfo.checked = false;
-            }
-            lfo.disabled = true;
-            filterFreqEl.disabled = false;
-            filterResEl.disabled = false;
-            playing = false;
-        });
-        
-        // Playing notes
-        while (playing) {
-            // Voice 1
-            const osc1 = actx.createOscillator();
-            osc1.type = 'sawtooth';
-            osc1.connect(filter);
-            osc1.frequency.value = notesVoice1[i];
-            osc1.start();
-            
-            // Voice 2
-            const osc2 = actx.createOscillator();
-            osc2.type = 'sawtooth';
-            osc2.connect(filter);
-            osc2.frequency.value = notesVoice2[i];
-            osc2.start();
-
-            await delay(160)
-
-            osc1.stop();
-            osc2.stop();
-
-            if (increasing) {
-                i++;
-                if (i === 4) increasing = false;
-            } else {
-                i--;
-                if (i === 0) increasing = true;
-            }
-        }
-
-    });
-</script>
 </html>
